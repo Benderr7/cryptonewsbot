@@ -1,6 +1,7 @@
 # Бот: раз в N часов собирает новости, делает сводку и постит в канал
 #   python main.py        - запуск по расписанию
 #   python main.py --dry  - один прогон, сводка печатается в консоль, в канал не постится
+#   python main.py --once - одна сводка в канал и выход
 import asyncio
 import os
 import sys
@@ -20,6 +21,14 @@ load_dotenv()
 
 
 async def make_digest(bot=None):
+    """Обёртка: планировщик молча глотает исключения, поэтому печатаем их сами."""
+    try:
+        await _make_digest(bot)
+    except Exception as e:
+        print(f"[!] Сводка не сделана: {e}")
+
+
+async def _make_digest(bot=None):
     """Один цикл: собрать -> отфильтровать -> сводка -> пост."""
     print(f"\n=== Сводка {datetime.now():%d.%m %H:%M} ===")
     # Сбор и нейронка работают синхронно, выносим в поток, чтобы не блокировать бота
@@ -53,6 +62,13 @@ async def main():
         return
 
     bot = Bot(os.getenv("BOT_TOKEN"))
+
+    if "--once" in sys.argv:
+        # Одна сводка в канал и выход, для проверки постинга
+        await make_digest(bot)
+        await bot.session.close()
+        return
+
     scheduler = AsyncIOScheduler()
     # next_run_time=now: первая сводка сразу при запуске, дальше по интервалу
     scheduler.add_job(make_digest, "interval", hours=config.DIGEST_INTERVAL_HOURS,

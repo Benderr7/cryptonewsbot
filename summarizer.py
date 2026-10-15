@@ -42,7 +42,8 @@ def summarize(items):
     last_error = None
     for base_url, key, model in providers:
         try:
-            client = OpenAI(base_url=base_url, api_key=key, timeout=120)
+            # 60 с без повторов: если нейронка висит, быстро переходим к запасной
+            client = OpenAI(base_url=base_url, api_key=key, timeout=60, max_retries=0)
             resp = client.chat.completions.create(
                 model=model,
                 messages=[{"role": "user", "content": PROMPT.format(news=news)}],

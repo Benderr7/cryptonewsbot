@@ -16,7 +16,7 @@ TG_CHANNELS = [
     "incrypted",
     "cointelegraph",
     "binance_announcements",
-    "whale_alert_io",
+    "Coin_Post",
 ]
 
 # Как часто делать сводку (в часах); новости берутся за этот же период
